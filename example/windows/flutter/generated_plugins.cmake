@@ -4,7 +4,6 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   firexcode
-  image_editor_pro
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

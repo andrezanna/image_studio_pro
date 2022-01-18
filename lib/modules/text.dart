@@ -12,7 +12,7 @@ class TextEditorImage extends StatefulWidget {
 class _TextEditorImageState extends State<TextEditorImage> {
   TextEditingController name = TextEditingController();
   Color currentColor = Colors.black;
-  double slider = 12.0;
+  double slider = 24.0;
   @override
   Widget build(BuildContext context) {
     return xColumn
@@ -22,7 +22,7 @@ class _TextEditorImageState extends State<TextEditorImage> {
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.all(10),
-              hintText: 'Insert Your Message',
+              hintText: 'Inserisci il testo',
               hintStyle: TextStyle(color: Colors.white),
               alignLabelWithHint: true,
             ),
@@ -37,7 +37,7 @@ class _TextEditorImageState extends State<TextEditorImage> {
           ).toContainer(height: xheight(context) / 2.2),
           xColumnCC.list([
             //   20.0.sizedHeight(),
-            'Slider Color'.text(),
+            'Colore'.text(),
             //   10.0.sizedHeight(),
             xRowCC.list([
               BarColorPicker(
@@ -50,10 +50,10 @@ class _TextEditorImageState extends State<TextEditorImage> {
                       currentColor = Color(value);
                     });
                   }).xExpanded(),
-              'Reset'.text().xFlatButton(onPressed: () {})
+              'Resetta'.text().xFlatButton(onPressed: () {})
             ]),
             //   20.0.sizedHeight(),
-            'Slider White Black Color'.text(),
+            'Trasparenza'.text(),
             //   10.0.sizedHeight(),
             xRowCC.list([
               BarColorPicker(
@@ -66,11 +66,11 @@ class _TextEditorImageState extends State<TextEditorImage> {
                       currentColor = Color(value);
                     });
                   }).xExpanded(),
-              'Reset'.text().xFlatButton(onPressed: () {})
+              'Resetta'.text().xFlatButton(onPressed: () {})
             ]),
             xColumn.list([
               10.0.sizedHeight(),
-              'Size Adjust'.toUpperCase().xTextColorWhite().toCenter(),
+              'Dimensione'.toUpperCase().xTextColorWhite().toCenter(),
               10.0.sizedHeight(),
               Slider(
                   activeColor: Colors.white,
@@ -147,7 +147,7 @@ class _TextEditorImageState extends State<TextEditorImage> {
                     }),
             ],
           ),
-          bottomNavigationBar: 'Add Text'
+          bottomNavigationBar: 'Aggiungi Testo'
               .xTextColorWhite(
                 fontWeight: FontWeight.bold,
                 fontsize: 22,

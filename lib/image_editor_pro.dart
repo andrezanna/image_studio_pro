@@ -14,14 +14,17 @@ import 'package:image_editor_pro/modules/bottombar_container.dart';
 import 'package:image_editor_pro/modules/emoji.dart';
 import 'package:image_editor_pro/modules/text.dart';
 import 'package:image_editor_pro/modules/textview.dart';
+import 'package:random_string/random_string.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:signature/signature.dart';
 import 'package:firexcode/firexcode.dart';
 import 'dart:math' as math;
-
+import 'package:text_editor/text_editor.dart' as emilio;
 import 'modules/color_filter_generator.dart';
-import 'modules/colors_picker.dart'; // import this
+import 'modules/colors_picker.dart';
+import 'text_editor/TextOverlay.dart';
+import 'text_editor/text_overlay_model.dart'; // import this
 
 TextEditingController heightcontroler = TextEditingController();
 TextEditingController widthcontroler = TextEditingController();
@@ -42,8 +45,10 @@ class ImageEditorPro extends StatefulWidget {
   final Directory pathSave;
   final File defaultImage;
   final double pixelRatio;
+  final String language;
 
   ImageEditorPro({
+    this.language,
     this.appBarColor,
     this.bottomBarColor,
     this.pathSave,
@@ -61,12 +66,17 @@ class _ImageEditorProState extends State<ImageEditorPro> {
   // create some values
   Color pickerColor = Color(0xff443a49);
   Color currentColor = Color(0xff443a49);
+  double oldScale=1.0;
+  double oldRotation=1.0;
+  Offset oldOffset=Offset(0,0);
 
+  bool showSlider=false;
 // ValueChanged<Color> callback
   void changeColor(Color color) {
     setState(() => pickerColor = color);
     var points = _controller.points;
     _controller = SignatureController(penStrokeWidth: 5, penColor: color, points: points);
+
   }
 
   List<Offset> offsets = [];
@@ -83,6 +93,27 @@ class _ImageEditorProState extends State<ImageEditorPro> {
   File _image;
   ScreenshotController screenshotController = ScreenshotController();
   Timer timeprediction;
+
+
+  static const List<String> fontNames = <String>[
+    "MuseoModerno",
+    "Raunchers",
+    "Poppins",
+    "Redressed",
+  ];
+  static TextStyle defaultOverlayTextStyle = TextStyle(
+    color: Colors.white,
+    fontSize: 38.0,
+    fontFamily: "MuseoModerno",
+  );
+  final List<TextOverlayModel> textOverlays = <TextOverlayModel>[];
+  final TextEditingController textEditingController = TextEditingController();
+  final GlobalKey repaintBoundaryKey = GlobalKey();
+  final GlobalKey textEditingKey = GlobalKey();
+  bool showTextOverlay = false;
+  bool dragging = false;
+  TextOverlayModel currentOverlay;
+
 
   void timers() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -129,192 +160,190 @@ class _ImageEditorProState extends State<ImageEditorPro> {
   double brightnessValue = 0;
   double saturationValue = 0;
 
+  bool enableBrush=false;
+
   @override
   Widget build(BuildContext context) {
-    return Screenshot(
-      controller: screenshotController,
-      child: RotatedBox(
-        quarterTurns: rotateValue,
-        child: imageFilterLatest(
+    return RotatedBox(
+      quarterTurns: rotateValue,
+      child:  imageFilterLatest(
           hue: hueValue,
           brightness: brightnessValue,
           saturation: saturationValue,
-          child: RepaintBoundary(
-              key: globalKey,
-              child: xStack.list(
-                [
-                  _image != null
-                      ? Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.rotationY(flipValue),
-                          child: ClipRect(
-                            // <-- clips to the 200x200 [Container] below
+          child: Container(
+            //color: Colors.blue,
+            child: Screenshot(
+        controller: screenshotController,
+        child:RepaintBoundary(
+                key: globalKey,
+                child: AspectRatio(
+                  aspectRatio: width/height,
+                  child: xStack.list(
+                    [
+                      _image != null
+                          ? Transform(
+                              alignment: Alignment.center,
+                              transform: Matrix4.rotationY(flipValue),
+                              child: ClipRect(
+                                // <-- clips to the 200x200 [Container] below
 
-                            child: _image.path.decorationIFToFitHeight().xContainer(
-                                padding: EdgeInsets.zero,
-                                // alignment: Alignment.center,
-                                width: width.toDouble(),
-                                height: height.toDouble(),
-                                child: BackdropFilter(
-                                  filter: ImageFilter.blur(
-                                    sigmaX: blurValue,
-                                    sigmaY: blurValue,
-                                  ),
-                                  child: Container(
-                                    color: colorValue.withOpacity(opacityValue),
-                                  ),
-                                )),
-                          ),
-                        )
-
-                      //  BackdropFilter(
-                      //     filter: ImageFilter.blur(
-                      //         sigmaX: 10.0, sigmaY: 10.0, tileMode: TileMode.clamp),
-                      //     child: Image.file(
-                      //       _image,
-                      //       height: height.toDouble(),
-                      //       width: width.toDouble(),
-                      //       fit: BoxFit.cover,
-                      //     ),
-                      //   )
-                      : Container(),
-                  Signat().xGesture(
-                    onPanUpdate: (DragUpdateDetails details) {
-                      setState(() {
-                        RenderBox object = context.findRenderObject();
-                        var _localPosition = object.globalToLocal(details.globalPosition);
-                        _points = List.from(_points)..add(_localPosition);
-                      });
-                    },
-                    onPanEnd: (DragEndDetails details) {
-                      _points.add(null);
-                    },
-                  ).xContainer(padding: EdgeInsets.all(0.0)),
-                  xStack.list(
-                    widgetJson.asMap().entries.map((f) {
-                      return type[f.key] == 1
-                          ? EmojiView(
-                              left: offsets[f.key].dx,
-                              top: offsets[f.key].dy,
-                              ontap: () {
-                                scaf.currentState.showBottomSheet((context) {
-                                  return Sliders(
-                                    index: f.key,
-                                    mapValue: f.value,
-                                  );
-                                });
-                              },
-                              onpanupdate: (details) {
-                                setState(() {
-                                  offsets[f.key] =
-                                      Offset(offsets[f.key].dx + details.delta.dx, offsets[f.key].dy + details.delta.dy);
-                                });
-                              },
-                              mapJson: f.value,
+                                child: _image.path.decorationIFToContain().xContainer(
+                                    padding: EdgeInsets.zero,
+                                    // alignment: Alignment.center,
+                                    //width: width.toDouble(),
+                                    //height: height.toDouble(),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(
+                                        sigmaX: blurValue,
+                                        sigmaY: blurValue,
+                                      ),
+                                      child: Container(
+                                        color: colorValue.withOpacity(opacityValue),
+                                      ),
+                                    )),
+                              ),
                             )
-                          : type[f.key] == 2
-                              ? TextView(
+
+                          //  BackdropFilter(
+                          //     filter: ImageFilter.blur(
+                          //         sigmaX: 10.0, sigmaY: 10.0, tileMode: TileMode.clamp),
+                          //     child: Image.file(
+                          //       _image,
+                          //       height: height.toDouble(),
+                          //       width: width.toDouble(),
+                          //       fit: BoxFit.cover,
+                          //     ),
+                          //   )
+                          : Container(),
+                      AbsorbPointer(
+                        absorbing:!enableBrush,
+                          child: Signat().xGesture(
+                          onPanUpdate: (DragUpdateDetails details) {
+                              setState(() {
+                                //print("update");
+                                RenderBox object = context.findRenderObject();
+                                var _localPosition = object.globalToLocal(
+                                    details.globalPosition);
+                                _points = List.from(_points)
+                                  ..add(_localPosition);
+                              });
+
+                          },
+                          onPanEnd: (DragEndDetails details) {
+                            _points.add(null);
+                          },
+                        ).xContainer(padding: EdgeInsets.all(0.0)),
+                      ),
+                      xStack.list(
+                        widgetJson.asMap().entries.map((f) {
+                          return type[f.key] == 1
+                              ? EmojiView(
                                   left: offsets[f.key].dx,
                                   top: offsets[f.key].dy,
                                   ontap: () {
-                                    showModalBottomSheet(
-                                        shape: BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10))
-                                            .xShapeBorder(),
-                                        context: context,
-                                        builder: (context) {
-                                          return Sliders(
-                                            index: f.key,
-                                            mapValue: f.value,
-                                          );
-                                        });
+                                    if(showSlider){
+                                      showSlider=false;
+                                      Navigator.of(context).pop();
+                                    }else {
+                                      showSlider=true;
+                                      scaf.currentState.showBottomSheet((
+                                          context) {
+                                        return Sliders(
+                                          index: f.key,
+                                          mapValue: f.value,
+                                          onlySize: true,
+                                        );
+                                      });
+                                    }
                                   },
-                                  onpanupdate: (details) {
+                                  /*onpanupdate: (details) {
                                     setState(() {
                                       offsets[f.key] =
                                           Offset(offsets[f.key].dx + details.delta.dx, offsets[f.key].dy + details.delta.dy);
                                     });
+                                  },*/
+                                  onscalestart:(details){
+                                    if(details.pointerCount==1){
+                                      oldScale=-1;
+                                      oldRotation= widgetJson[f.key]['rotation'];
+                                      oldOffset=offsets[f.key];
+                                      print("single");
+                                    }else {
+                                      oldScale = widgetJson[f.key]['size'];
+                                      oldRotation= widgetJson[f.key]['rotation'];
+                                    }
+                                          //oldScale=details.;
                                   },
+                                  onscaleupdate: (details){
+                                    setState((){
+                                      if(oldScale==-1) {
+                                        print(details.localFocalPoint);
+                                        print(details.delta);
+                                        offsets[f.key] =
+                                            Offset(oldOffset.dx +
+                                                details.delta.dx,
+                                                oldOffset.dy +
+                                                    details.delta.dy);
+                                      }else {
+                                        widgetJson[f.key]['size'] =
+                                            oldScale * details.scale;
+                                      }
+                                      //print(oldRotation);
+                                      //print(details.rotation);
+                                        widgetJson[f.key]['rotation'] =
+                                            oldRotation + details.rotation;
+
+                                    });
+                                  },
+
                                   mapJson: f.value,
                                 )
-                              : Container();
-                    }).toList(),
-                  )
-                ],
-              )).toContainer(
-            margin: EdgeInsets.all(20),
-            color: Colors.white,
-            width: width.toDouble(),
-            height: height.toDouble(),
-          ),
+
+                                  : Container();
+                        }).toList(),
+
+                      ),
+                      RepaintBoundary(
+                      key: repaintBoundaryKey,
+                      child: Stack(
+                        children: List<Widget>.generate(
+                          textOverlays.length,
+                              (int index) => TextOverlay(
+                            textOverlayModel: textOverlays.elementAt(index),
+                            updateCallback: () => setState(() {}),
+                            devicePadding: MediaQuery.of(context).padding,
+                            onTap: (textOverlay) =>
+                                startEditingTextOverlay(textOverlay),
+                            draggingCallback: (bool dragging) =>
+                                setState(() => this.dragging = dragging),
+                          ),
+                        ),
+                      ),
+                    ),
+                    ],
+                  ),
+                )),
         ),
+          ),
       ),
     ).xCenter().xScaffold(
         backgroundColor: Colors.grey.shade400,
         key: scaf,
         appBar: AppBar(
           actions: <Widget>[
-            Icon(FontAwesomeIcons.boxes).xIconButton(onPressed: () {
-              showCupertinoDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: 'Select Height Width'.text(),
-                      actions: <Widget>[
-                        () {
-                          setState(() {
-                            height = int.parse(heightcontroler.text);
-                            width = int.parse(widthcontroler.text);
-                          });
-                          heightcontroler.clear();
-                          widthcontroler.clear();
-                          Navigator.pop(context);
-                        }.xFlatButton(child: 'Done'.text()),
-                      ],
-                      content: SingleChildScrollView(
-                        child: xColumnSS.list(
-                          [
-                            'Define Height'.text(),
-                            10.0.sizedHeight(),
-                            TextField(
-                                controller: heightcontroler,
-                                keyboardType: TextInputType.numberWithOptions(),
-                                decoration: InputDecoration(
-                                    hintText: 'Height',
-                                    contentPadding: EdgeInsets.only(left: 10),
-                                    border: OutlineInputBorder())),
-                            10.0.sizedHeight(),
-                            'Define Width'.text(),
-                            10.0.sizedHeight(),
-                            TextField(
-                                controller: widthcontroler,
-                                keyboardType: TextInputType.numberWithOptions(),
-                                decoration: InputDecoration(
-                                    hintText: 'Width',
-                                    contentPadding: EdgeInsets.only(left: 10),
-                                    border: OutlineInputBorder())),
-                          ],
-                        ),
-                      ),
-                    );
-                  });
-            }),
-            Icon(Icons.clear).xIconButton(onPressed: () {
-              _controller.points.clear();
-              setState(() {});
-            }),
-            Icon(Icons.camera_alt).xIconButton(onPressed: () {
-              bottomsheets();
-            }),
-            'Save'.text().xFlatButton(
-                primary: Colors.white,
+
+            'Salva'.text().xFlatButton(
+                primary: Colors.black,
                 onPressed: () {
-                  screenshotController.capture(pixelRatio: widget.pixelRatio ?? 1.5).then((binaryIntList) async {
+                  screenshotController.capture(pixelRatio: widget.pixelRatio ?? 1).then((binaryIntList) async {
                     //print("Capture Done");
 
                     final paths = widget.pathSave ?? await getTemporaryDirectory();
 
                     final file = await File('${paths.path}/' + DateTime.now().toString() + '.jpg').create();
+                    print(file.path);
                     file.writeAsBytesSync(binaryIntList);
+                    //file.copySync('${paths.path}/resized.jpg');
                     Navigator.pop(context, file);
                   }).catchError((onError) {
                     print(onError);
@@ -335,50 +364,167 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                     colors: widget.bottomBarColor,
                     icons: FontAwesomeIcons.brush,
                     ontap: () {
+                      enableBrush=!enableBrush;
+
                       // raise the [showDialog] widget
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: 'Pick a color!'.text(),
-                            content: ColorPicker(
-                              pickerColor: pickerColor,
-                              onColorChanged: changeColor,
-                              showLabel: true,
-                              pickerAreaHeightPercent: 0.8,
-                            ).xSingleChildScroolView(),
-                            actions: <Widget>[
-                              'Got it'.text().xFlatButton(
-                                onPressed: () {
-                                  setState(() => currentColor = pickerColor);
-                                  back(context);
-                                },
-                              )
-                            ],
-                          );
-                        },
-                      );
+                      if(enableBrush) {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: 'Scegli il colore!'.text(),
+                              content: ColorPicker(
+                                pickerColor: pickerColor,
+                                onColorChanged: changeColor,
+                                showLabel: true,
+                                pickerAreaHeightPercent: 0.8,
+                              ).xSingleChildScroolView(),
+                              actions: <Widget>[
+                                'Accetta'.text().xFlatButton(
+                                  onPressed: () {
+                                    setState(() => currentColor = pickerColor);
+                                    back(context);
+                                  },
+                                )
+                              ],
+                            );
+                          },
+                        );
+                      }
+                      setState(() {
+
+                      });
                     },
-                    title: 'Brush',
+                    title: 'Pennello',
                   ),
                   BottomBarContainer(
                     colors: widget.bottomBarColor,
                     icons: Icons.text_fields,
                     ontap: () async {
-                      var value = await Navigator.push(context, MaterialPageRoute(builder: (context) => TextEditorImage()));
-                      if (value['name'] == null) {
-                        print('true');
-                      } else {
-                        type.add(2);
-                        widgetJson.add(value);
-                        // fontsize.add(20);
-                        offsets.add(Offset.zero);
-                        //  colorList.add(value['color']);
-                        //    multiwidget.add(value['name']);
-                        howmuchwidgetis++;
-                      }
+                      startEditingTextOverlay(null);
+
                     },
-                    title: 'Text',
+                    title: 'Testo',
+                  ),
+/*
+                  BottomBarContainer(
+                    colors: widget.bottomBarColor,
+                    icons: Icons.photo,
+                    ontap: () {
+                      showModalBottomSheet(
+                          shape:
+                              BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10)).xShapeBorder(),
+                          context: context,
+                          builder: (context) {
+                            return StatefulBuilder(
+                              builder: (context, setS) {
+                                return xColumnCC.list([
+                                  5.0.sizedHeight(),
+                                  'Tinta'.xTextColorWhite(),
+                                  10.0.sizedHeight(),
+                                  xRow.list([
+                                    Slider(
+                                        activeColor: Colors.white,
+                                        inactiveColor: Colors.grey,
+                                        value: hueValue,
+                                        min: -10.0,
+                                        max: 10.0,
+                                        onChanged: (v) {
+                                          setS(() {
+                                            setState(() {
+                                              hueValue = v;
+                                            });
+                                          });
+                                        }).xExpanded(),
+                                    'Resetta'.xTextColorWhite().xFlatButton(onPressed: () {
+                                      setS(() {
+                                        setState(() {
+                                          blurValue = 0.0;
+                                        });
+                                      });
+                                    })
+                                  ]),
+                                  5.0.sizedHeight(),
+                                  'Saturazione'.xTextColorWhite(),
+                                  10.0.sizedHeight(),
+                                  xRow.list([
+                                    Slider(
+                                        activeColor: Colors.white,
+                                        inactiveColor: Colors.grey,
+                                        value: saturationValue,
+                                        min: -10.0,
+                                        max: 10.0,
+                                        onChanged: (v) {
+                                          setS(() {
+                                            setState(() {
+                                              saturationValue = v;
+                                            });
+                                          });
+                                        }).xExpanded(),
+                                    'Resetta'.xTextColorWhite().xFlatButton(onPressed: () {
+                                      setS(() {
+                                        setState(() {
+                                          saturationValue = 0.0;
+                                        });
+                                      });
+                                    })
+                                  ]),
+                                  5.0.sizedHeight(),
+                                  'Luminosità'.xTextColorWhite(),
+                                  10.0.sizedHeight(),
+                                  xRow.list([
+                                    Slider(
+                                        activeColor: Colors.white,
+                                        inactiveColor: Colors.grey,
+                                        value: brightnessValue,
+                                        min: 0.0,
+                                        max: 1.0,
+                                        onChanged: (v) {
+                                          setS(() {
+                                            setState(() {
+                                              brightnessValue = v;
+                                            });
+                                          });
+                                        }).xExpanded(),
+                                    'Resetta'.xTextColorWhite().xFlatButton(onPressed: () {
+                                      setS(() {
+                                        setState(() {
+                                          brightnessValue = 0.0;
+                                        });
+                                      });
+                                    })
+                                  ])
+                                ]);
+                              },
+                            ).xContainer(
+                                color: Colors.black87,
+                                height: 300,
+                                borderRadius:
+                                    BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10)));
+                          });
+                    },
+                    title: 'Filtro',
+                  ),*/
+                  BottomBarContainer(
+                    colors: widget.bottomBarColor,
+                    icons: FontAwesomeIcons.smile,
+                    ontap: () {
+                      var getemojis = showModalBottomSheet(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return Emojies();
+                          });
+                      getemojis.then((value) {
+                        if (value['name'] != null) {
+                          type.add(1);
+                          widgetJson.add(value);
+                          offsets.add(Offset(150,150));
+                          //  multiwidget.add(value);
+                          howmuchwidgetis++;
+                        }
+                      });
+                    },
+                    title: 'Emoji',
                   ),
                   BottomBarContainer(
                     colors: widget.bottomBarColor,
@@ -388,7 +534,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                         flipValue = flipValue == 0 ? math.pi : 0;
                       });
                     },
-                    title: 'Flip',
+                    title: 'Inverti',
                   ),
                   BottomBarContainer(
                     colors: widget.bottomBarColor,
@@ -398,7 +544,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                         rotateValue--;
                       });
                     },
-                    title: 'Rotate left',
+                    title: 'Rotazione sinistra',
                   ),
                   BottomBarContainer(
                     colors: widget.bottomBarColor,
@@ -408,9 +554,9 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                         rotateValue++;
                       });
                     },
-                    title: 'Rotate right',
+                    title: 'Rotazione destra',
                   ),
-                  BottomBarContainer(
+                  /*BottomBarContainer(
                     colors: widget.bottomBarColor,
                     icons: Icons.blur_on,
                     ontap: () {
@@ -422,13 +568,13 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                             builder: (context, setS) {
                               return xColumn.list(
                                 [
-                                  'Slider Filter Color'.toUpperCase().xTextColorWhite().toCenter(),
+                                  'Colore Filtro'.toUpperCase().xTextColorWhite().toCenter(),
                                   Divider(
 
                                       // height: 1,
                                       ),
                                   20.0.sizedHeight(),
-                                  'Slider Color'.xTextColorWhite(),
+                                  'Colore'.xTextColorWhite(),
                                   //   10.0.sizedHeight(),
                                   xRowCC.list([
                                     BarColorPicker(
@@ -514,7 +660,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                       );
                     },
                     title: 'Blur',
-                  ),
+                  ),*/
                   BottomBarContainer(
                     colors: widget.bottomBarColor,
                     icons: FontAwesomeIcons.eraser,
@@ -526,127 +672,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                       // // multiwidget.clear();
                       howmuchwidgetis = 0;
                     },
-                    title: 'Eraser',
-                  ),
-                  BottomBarContainer(
-                    colors: widget.bottomBarColor,
-                    icons: Icons.photo,
-                    ontap: () {
-                      showModalBottomSheet(
-                          shape:
-                              BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10)).xShapeBorder(),
-                          context: context,
-                          builder: (context) {
-                            return StatefulBuilder(
-                              builder: (context, setS) {
-                                return xColumnCC.list([
-                                  5.0.sizedHeight(),
-                                  'Slider Hue'.xTextColorWhite(),
-                                  10.0.sizedHeight(),
-                                  xRow.list([
-                                    Slider(
-                                        activeColor: Colors.white,
-                                        inactiveColor: Colors.grey,
-                                        value: hueValue,
-                                        min: -10.0,
-                                        max: 10.0,
-                                        onChanged: (v) {
-                                          setS(() {
-                                            setState(() {
-                                              hueValue = v;
-                                            });
-                                          });
-                                        }).xExpanded(),
-                                    'Reset'.xTextColorWhite().xFlatButton(onPressed: () {
-                                      setS(() {
-                                        setState(() {
-                                          blurValue = 0.0;
-                                        });
-                                      });
-                                    })
-                                  ]),
-                                  5.0.sizedHeight(),
-                                  'Slider Saturation'.xTextColorWhite(),
-                                  10.0.sizedHeight(),
-                                  xRow.list([
-                                    Slider(
-                                        activeColor: Colors.white,
-                                        inactiveColor: Colors.grey,
-                                        value: saturationValue,
-                                        min: -10.0,
-                                        max: 10.0,
-                                        onChanged: (v) {
-                                          setS(() {
-                                            setState(() {
-                                              saturationValue = v;
-                                            });
-                                          });
-                                        }).xExpanded(),
-                                    'Reset'.xTextColorWhite().xFlatButton(onPressed: () {
-                                      setS(() {
-                                        setState(() {
-                                          saturationValue = 0.0;
-                                        });
-                                      });
-                                    })
-                                  ]),
-                                  5.0.sizedHeight(),
-                                  'Slider Brightness'.xTextColorWhite(),
-                                  10.0.sizedHeight(),
-                                  xRow.list([
-                                    Slider(
-                                        activeColor: Colors.white,
-                                        inactiveColor: Colors.grey,
-                                        value: brightnessValue,
-                                        min: 0.0,
-                                        max: 1.0,
-                                        onChanged: (v) {
-                                          setS(() {
-                                            setState(() {
-                                              brightnessValue = v;
-                                            });
-                                          });
-                                        }).xExpanded(),
-                                    'Reset'.xTextColorWhite().xFlatButton(onPressed: () {
-                                      setS(() {
-                                        setState(() {
-                                          brightnessValue = 0.0;
-                                        });
-                                      });
-                                    })
-                                  ])
-                                ]);
-                              },
-                            ).xContainer(
-                                color: Colors.black87,
-                                height: 300,
-                                borderRadius:
-                                    BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10)));
-                          });
-                    },
-                    title: 'Filter',
-                  ),
-                  BottomBarContainer(
-                    colors: widget.bottomBarColor,
-                    icons: FontAwesomeIcons.smile,
-                    ontap: () {
-                      var getemojis = showModalBottomSheet(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return Emojies();
-                          });
-                      getemojis.then((value) {
-                        if (value['name'] != null) {
-                          type.add(1);
-                          widgetJson.add(value);
-                          //    fontsize.add(20);
-                          offsets.add(Offset.zero);
-                          //  multiwidget.add(value);
-                          howmuchwidgetis++;
-                        }
-                      });
-                    },
-                    title: 'Emoji',
+                    title: 'Cancella',
                   ),
                 ],
               ).xContainer(
@@ -724,6 +750,8 @@ class _ImageEditorProState extends State<ImageEditorPro> {
     setState(() {
       height = decodedImage.height;
       width = decodedImage.width;
+      print(height);
+      print(width);
       _image = imageFile;
       _controller.clear();
     });
@@ -731,6 +759,91 @@ class _ImageEditorProState extends State<ImageEditorPro> {
 
   void _closeModal(void value) {
     openbottomsheet = false;
+    setState(() {});
+  }
+
+
+  void _tapHandler(TextOverlayModel overlay) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      transitionDuration: Duration(
+        milliseconds: 400,
+      ), // how long it takes to popup dialog after button click
+      pageBuilder: (_, __, ___) {
+        // your widget implementation
+        return Container(
+          color: Colors.black.withOpacity(0.4),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: SafeArea(
+              // top: false,
+              child: Container(
+                child: emilio.TextEditor(
+                  fonts: fontNames,
+                  text: overlay.text,
+                  textStyle: overlay.textStyle,
+                  textAlingment: overlay.align,
+                  onEditCompleted: (style, align, text) {
+                    currentOverlay.text = text;
+                    currentOverlay.textStyle = style;
+                    currentOverlay.align = align;
+                    currentOverlay.offset ??= Offset(
+                      MediaQuery.of(context).size.width / 2,
+                      MediaQuery.of(context).size.height / 2,
+                    );
+
+                      //type.add(2);
+                      //widgetJson.add(currentOverlay.toMap());
+                      // fontsize.add(20);
+                      //offsets.add(Offset(150,150));
+                      //  colorList.add(value['color']);
+                      //    multiwidget.add(value['name']);
+                      //howmuchwidgetis++;
+
+                    addTextOverlay(currentOverlay);
+                    Navigator.pop(context);
+                  },
+                  onCancel: () {
+                    print("onCane ${currentOverlay.id} ");
+                    //widgetJson.removeWhere((element) => element['id'] == currentOverlay.id);
+                    textOverlays.removeWhere(
+                            (element) =>element.id == currentOverlay.id);
+                    stopEditingTextOverlay();
+                    Navigator.of(context).pop();
+                  },
+                  doneText: "OK",
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  void addTextOverlay(TextOverlayModel newTextOverlay) =>
+      setState(() => textOverlays.add(newTextOverlay));
+
+  void startEditingTextOverlay(TextOverlayModel textOverlay) {
+    debugPrint("Cominciamo ad editare il testo sopra una storia / reel.");
+
+    if (textOverlay != null) {
+      currentOverlay = textOverlay;
+      textOverlays.removeWhere((element) => element.id == currentOverlay.id);
+    } else
+      currentOverlay = TextOverlayModel(
+        id: randomAlphaNumeric(20),
+        text: "",
+        textStyle: defaultOverlayTextStyle,
+        offset: null,
+      );
+
+    _tapHandler(currentOverlay);
+  }
+
+  void stopEditingTextOverlay() {
+    this.currentOverlay = null;
+    this.showTextOverlay = false;
     setState(() {});
   }
 }
@@ -744,7 +857,7 @@ class _SignatState extends State<Signat> {
   @override
   void initState() {
     super.initState();
-    _controller.addListener(() => print('Value changed'));
+    //_controller.addListener(() => print('Value changed'));
   }
 
   @override

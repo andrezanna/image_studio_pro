@@ -12,7 +12,7 @@ class _EmojiesState extends State<Emojies> {
   @override
   Widget build(BuildContext context) {
     return xColumn.list([
-      xRowCC.list(['Select Emoji'.text()]).xap(value: 20),
+      xRowCC.list(['Seleziona Emoji'.text()]).xap(value: 20),
       Divider(
         height: 1,
       ),
@@ -32,8 +32,9 @@ class _EmojiesState extends State<Emojies> {
                   Navigator.pop(context, {
                     'name': emoji,
                     'color': Colors.white,
-                    'size': 12.0,
-                    'align': TextAlign.center
+                    'size': 35.0,
+                    'align': TextAlign.center,
+                    'rotation':0.0,
                   });
                 }));
               }).toList())

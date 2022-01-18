@@ -6,8 +6,9 @@ import 'colors_picker.dart';
 class Sliders extends StatefulWidget {
   final int index;
   final Map mapValue;
+  final bool onlySize;
 
-  const Sliders({Key key, this.mapValue, this.index}) : super(key: key);
+  const Sliders({Key key, this.mapValue, this.index,this.onlySize=false}) : super(key: key);
 
   @override
   _SlidersState createState() => _SlidersState();
@@ -26,7 +27,7 @@ class _SlidersState extends State<Sliders> {
     return xColumnCC.list(
       [
         10.0.sizedHeight(),
-        'Size Adjust'.toUpperCase().xTextColorWhite().toCenter(),
+        'Dimensione'.toUpperCase().xTextColorWhite().toCenter(),
         Divider(
 
             // height: 1,
@@ -36,7 +37,7 @@ class _SlidersState extends State<Sliders> {
             inactiveColor: Colors.grey,
             value: widgetJson[widget.index]['size'],
             min: 0.0,
-            max: 100.0,
+            max: 200.0,
             onChangeEnd: (v) {
               setState(() {
                 widgetJson[widget.index]['size'] = v.toDouble();
@@ -50,9 +51,9 @@ class _SlidersState extends State<Sliders> {
               });
             }),
         10.0.sizedHeight(),
-        xColumn.list([
+        if(!widget.onlySize)xColumn.list([
           20.0.sizedHeight(),
-          'Slider Color'.text(),
+          'Colore'.text(),
           //   10.0.sizedHeight(),
           xRowCC.list([
             BarColorPicker(
@@ -65,10 +66,10 @@ class _SlidersState extends State<Sliders> {
                     widgetJson[widget.index]['color'] = Color(value);
                   });
                 }).xExpanded(),
-            'Reset'.text().xFlatButton(onPressed: () {})
+            'Resetra'.text().xFlatButton(onPressed: () {})
           ]),
           //   20.0.sizedHeight(),
-          'Slider White Black Color'.text(),
+          'Saturazione'.text(),
           //   10.0.sizedHeight(),
           xRowCC.list([
             BarColorPicker(
@@ -81,12 +82,12 @@ class _SlidersState extends State<Sliders> {
                     widgetJson[widget.index]['color'] = Color(value);
                   });
                 }).xExpanded(),
-            'Reset'.text().xFlatButton(onPressed: () {})
+            'Resetta'.text().xFlatButton(onPressed: () {})
           ]),
         ]).xContainer(color: Colors.white, rounded: 10),
         10.0.sizedHeight(),
         xRow.list([
-          'Remove'
+          'Rimuovi'
               .text()
               .xFlatButton(
                   color: Colors.white,
@@ -100,9 +101,7 @@ class _SlidersState extends State<Sliders> {
       ],
     ).xContainer(
       color: Colors.black87,
-      height: 350,
-      borderRadius: BorderRadius.only(
-          topRight: Radius.circular(10), topLeft: Radius.circular(10)),
+      //height: 350,
     );
   }
 }
