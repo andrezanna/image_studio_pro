@@ -114,7 +114,7 @@ class _TextOverlayState extends State<TextOverlay> with AfterLayoutMixin<TextOve
       left: widget.textOverlayModel.offset.dx - widget.devicePadding.top - (lastWidgetSize?.height ?? 0.0 / 2),
       top: widget.textOverlayModel.offset.dy - (lastWidgetSize?.width ?? 0.0 / 2),
      */
-    print(focalPoint.toString());
+    //print(focalPoint.toString());
     //return focalPoint;
     if (add) {
       return Offset(

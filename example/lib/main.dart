@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:image_editor_pro/image_editor_pro.dart';
 import 'package:firexcode/firexcode.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:video_player/video_player.dart';
 
 void main() {
   runApp(MyApp());
@@ -23,19 +25,36 @@ class _HomePageState extends State<HomePage> {
   final controllerDefaultImage = TextEditingController();
   File _defaultImage;
   File _image;
+  VideoPlayerController videoController;
 
   Future<void> getimageditor() => Navigator.push(context, MaterialPageRoute(builder: (context) {
         return ImageEditorPro(
           appBarColor: Colors.black87,
           bottomBarColor: Colors.black87,
           pathSave: null,
-          defaultImage: _defaultImage,
+          defaultMedia: _defaultImage,
+          isImage: false,
         );
-      })).then((geteditimage) {
+      })).then((geteditimage)async{
         if (geteditimage != null) {
-          setState(() {
-            _image = geteditimage;
-          });
+          try {
+            Share.shareFiles([geteditimage.path]);
+            print('BOBOBOBOBOBOBOB##################################');
+            videoController = VideoPlayerController.file(geteditimage);
+            if ((geteditimage as File).existsSync()) {
+              print(geteditimage.path);
+            }
+            setState(() {
+              _image = geteditimage;
+              print("MALALAAAAAAAAAAAAA ${_image.toString()}");
+            });
+            await videoController.initialize();
+
+            
+            videoController.play();
+          }catch(e){
+            print("ERRRRRRR"+e);
+          }
         }
       }).catchError((er) {
         print(er);
@@ -58,7 +77,7 @@ class _HomePageState extends State<HomePage> {
                   16.0.sizedHeight(),
                   'Set Default Image'.text().xRaisedButton(
                     onPressed: () async {
-                      final imageGallery = await ImagePicker().getImage(source: ImageSource.gallery);
+                      final imageGallery = await ImagePicker().getVideo(source: ImageSource.gallery);
                       if (imageGallery != null) {
                         _defaultImage = File(imageGallery.path);
                         setState(() => controllerDefaultImage.text = _defaultImage.path);
@@ -73,13 +92,14 @@ class _HomePageState extends State<HomePage> {
                 ])
                 .xCenter()
                 .xap(value: 16),
-            isFalse: _image == null ? Container() : Image.file(_image).toCenter())
+            isFalse: _image == null ? Container() : VideoPlayer(videoController).toCenter())
         .xScaffold(
       appBar: 'Image Editor Pro example'.xTextColorWhite().xAppBar(),
       floatingActionButton: Icons.add.xIcons().xFloationActiobButton(
             color: Colors.red,
             onTap: () {
-              // TODO: I don't know what I'm doing in here
+              videoController.play();
+// TODO: I don't know what I'm doing in here
             },
           ),
     );

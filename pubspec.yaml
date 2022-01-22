@@ -10,15 +10,15 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.3
-  zoom_widget: any
-  font_awesome_flutter: any
-  image_picker: any
+  zoom_widget: ^0.2.1
+  font_awesome_flutter: ^9.2.0
+  image_picker: ^0.8.4+4
   path_provider: any
-  permission_handler: ^8.1.4+2
+  permission_handler: ^8.3.0
   dio: any
   screenshot: any
   signature: any
-  flutter_colorpicker: any
+  flutter_colorpicker: ^1.0.3
   firexcode: any
   json_ast: 1.0.5
   collection: ^1.15.0
@@ -26,6 +26,9 @@ dependencies:
     git: https://github.com/emiliodallatorre/text-editor.git
   after_layout: any
   random_string: any
+  video_player: any
+  flutter_ffmpeg: ^0.4.2
+  photo_manager: any
 
 dev_dependencies:
   pedantic: ^1.11.1

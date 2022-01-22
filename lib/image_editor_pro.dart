@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_editor_pro/modules/sliders.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,6 +16,7 @@ import 'package:image_editor_pro/modules/bottombar_container.dart';
 import 'package:image_editor_pro/modules/emoji.dart';
 import 'package:image_editor_pro/modules/text.dart';
 import 'package:image_editor_pro/modules/textview.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:random_string/random_string.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
@@ -21,6 +24,7 @@ import 'package:signature/signature.dart';
 import 'package:firexcode/firexcode.dart';
 import 'dart:math' as math;
 import 'package:text_editor/text_editor.dart' as emilio;
+import 'package:video_player/video_player.dart';
 import 'modules/color_filter_generator.dart';
 import 'modules/colors_picker.dart';
 import 'text_editor/TextOverlay.dart';
@@ -43,17 +47,19 @@ class ImageEditorPro extends StatefulWidget {
   final Color appBarColor;
   final Color bottomBarColor;
   final Directory pathSave;
-  final File defaultImage;
+  final File defaultMedia;
   final double pixelRatio;
   final String language;
+  final bool isImage;
 
   ImageEditorPro({
     this.language,
     this.appBarColor,
     this.bottomBarColor,
     this.pathSave,
-    this.defaultImage,
+    this.defaultMedia,
     this.pixelRatio,
+    this.isImage=true,
   });
 
   @override
@@ -71,6 +77,8 @@ class _ImageEditorProState extends State<ImageEditorPro> {
   Offset oldOffset=Offset(0,0);
 
   bool showSlider=false;
+
+  bool isWorking=false;
 // ValueChanged<Color> callback
   void changeColor(Color color) {
     setState(() => pickerColor = color);
@@ -90,21 +98,22 @@ class _ImageEditorProState extends State<ImageEditorPro> {
 
   final GlobalKey container = GlobalKey();
   final GlobalKey globalKey = GlobalKey();
-  File _image;
+  File media;
+  VideoPlayerController videoController;
   ScreenshotController screenshotController = ScreenshotController();
   Timer timeprediction;
 
 
   static const List<String> fontNames = <String>[
-    "MuseoModerno",
-    "Raunchers",
-    "Poppins",
-    "Redressed",
+    'MuseoModerno',
+    'Raunchers',
+    'Poppins',
+    'Redressed',
   ];
   static TextStyle defaultOverlayTextStyle = TextStyle(
     color: Colors.white,
     fontSize: 38.0,
-    fontFamily: "MuseoModerno",
+    fontFamily: 'MuseoModerno',
   );
   final List<TextOverlayModel> textOverlays = <TextOverlayModel>[];
   final TextEditingController textEditingController = TextEditingController();
@@ -117,8 +126,8 @@ class _ImageEditorProState extends State<ImageEditorPro> {
 
   void timers() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.defaultImage != null && widget.defaultImage.existsSync()) {
-        loadImage(widget.defaultImage);
+      if (widget.defaultMedia != null && widget.defaultMedia.existsSync()) {
+        loadMedia(widget.defaultMedia);
       }
     });
     Timer.periodic(Duration(milliseconds: 10), (tim) {
@@ -172,158 +181,197 @@ class _ImageEditorProState extends State<ImageEditorPro> {
           saturation: saturationValue,
           child: Container(
             //color: Colors.blue,
-            child: Screenshot(
+            child: Stack(
+
+              children: [
+                !widget.isImage?
+                Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.rotationY(flipValue),
+                  child: ClipRect(
+                    // <-- clips to the 200x200 [Container] below
+
+                    child: Container(
+                        padding: EdgeInsets.zero,
+                        // alignment: Alignment.center,
+                        //width: width.toDouble(),
+                        //height: height.toDouble(),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(
+                            sigmaX: blurValue,
+                            sigmaY: blurValue,
+                          ),
+                          child: Container(
+                            color: colorValue.withOpacity(opacityValue),
+                            child: AspectRatio(
+                              aspectRatio: videoController.value.aspectRatio,
+                              child: VideoPlayer(videoController,
+                              ),
+                            ),
+                          ),
+                        )),
+                  ),
+                ):Container(),
+                Screenshot(
         controller: screenshotController,
         child:RepaintBoundary(
-                key: globalKey,
-                child: AspectRatio(
-                  aspectRatio: width/height,
-                  child: xStack.list(
-                    [
-                      _image != null
-                          ? Transform(
-                              alignment: Alignment.center,
-                              transform: Matrix4.rotationY(flipValue),
-                              child: ClipRect(
-                                // <-- clips to the 200x200 [Container] below
+                    key: globalKey,
+                    child: AspectRatio(
+                      aspectRatio: width/height,
+                      child: xStack.list(
+                        [
+                          widget.isImage && media != null
+                              ? Center(
+                                child: Transform(
+                                    alignment: Alignment.center,
+                                    transform: Matrix4.rotationY(flipValue),
+                                    child: ClipRect(
+                                      // <-- clips to the 200x200 [Container] below
 
-                                child: _image.path.decorationIFToContain().xContainer(
-                                    padding: EdgeInsets.zero,
-                                    // alignment: Alignment.center,
-                                    //width: width.toDouble(),
-                                    //height: height.toDouble(),
-                                    child: BackdropFilter(
-                                      filter: ImageFilter.blur(
-                                        sigmaX: blurValue,
-                                        sigmaY: blurValue,
-                                      ),
-                                      child: Container(
-                                        color: colorValue.withOpacity(opacityValue),
-                                      ),
-                                    )),
+                                      child: media.path.decorationIFToContain().xContainer(
+                                          padding: EdgeInsets.zero,
+                                          // alignment: Alignment.center,
+                                          //width: width.toDouble(),
+                                          //height: height.toDouble(),
+                                          child: BackdropFilter(
+                                            filter: ImageFilter.blur(
+                                              sigmaX: blurValue,
+                                              sigmaY: blurValue,
+                                            ),
+                                            child: Container(
+                                              color: colorValue.withOpacity(opacityValue),
+                                            ),
+                                          )),
+                                    ),
+                                  ),
+                              )
+
+                              //  BackdropFilter(
+                              //     filter: ImageFilter.blur(
+                              //         sigmaX: 10.0, sigmaY: 10.0, tileMode: TileMode.clamp),
+                              //     child: Image.file(
+                              //       _image,
+                              //       height: height.toDouble(),
+                              //       width: width.toDouble(),
+                              //       fit: BoxFit.cover,
+                              //     ),
+                              //   )
+
+                              : Container(),
+                          AbsorbPointer(
+                            absorbing:!enableBrush,
+                              child: Signat().xGesture(
+                              onPanUpdate: (DragUpdateDetails details) {
+                                  setState(() {
+                                    //print("update");
+                                    RenderBox object = context.findRenderObject();
+                                    var _localPosition = object.globalToLocal(
+                                        details.globalPosition);
+                                    _points = List.from(_points)
+                                      ..add(_localPosition);
+                                  });
+
+                              },
+                              onPanEnd: (DragEndDetails details) {
+                                _points.add(null);
+                              },
+                            ).xContainer(padding: EdgeInsets.all(0.0)),
+                          ),
+                          xStack.list(
+                            widgetJson.asMap().entries.map((f) {
+                              return type[f.key] == 1
+                                  ? EmojiView(
+                                      left: offsets[f.key].dx,
+                                      top: offsets[f.key].dy,
+                                      ontap: () {
+                                        if(showSlider){
+                                          showSlider=false;
+                                          Navigator.of(context).pop();
+                                        }else {
+                                          showSlider=true;
+                                          scaf.currentState.showBottomSheet((
+                                              context) {
+                                            return Sliders(
+                                              index: f.key,
+                                              mapValue: f.value,
+                                              onlySize: true,
+                                            );
+                                          });
+                                        }
+                                      },
+                                      /*onpanupdate: (details) {
+                                        setState(() {
+                                          offsets[f.key] =
+                                              Offset(offsets[f.key].dx + details.delta.dx, offsets[f.key].dy + details.delta.dy);
+                                        });
+                                      },*/
+                                      onscalestart:(details){
+                                        if(details.pointerCount==1){
+                                          oldScale=-1;
+                                          oldRotation= widgetJson[f.key]['rotation'];
+                                          oldOffset=offsets[f.key];
+                                          //print("single");
+                                        }else {
+                                          oldScale = widgetJson[f.key]['size'];
+                                          oldRotation= widgetJson[f.key]['rotation'];
+                                        }
+                                              //oldScale=details.;
+                                      },
+                                      onscaleupdate: (details){
+                                        setState((){
+                                          if(oldScale==-1) {
+                                            //print(details.localFocalPoint);
+                                            //print(details.delta);
+                                            offsets[f.key] =
+                                                Offset(oldOffset.dx +
+                                                    details.delta.dx,
+                                                    oldOffset.dy +
+                                                        details.delta.dy);
+                                          }else {
+                                            widgetJson[f.key]['size'] =
+                                                oldScale * details.scale;
+                                          }
+                                          //print(oldRotation);
+                                          //print(details.rotation);
+                                            widgetJson[f.key]['rotation'] =
+                                                oldRotation + details.rotation;
+
+                                        });
+                                      },
+
+                                      mapJson: f.value,
+                                    )
+
+                                      : Container();
+                            }).toList(),
+
+                          ),
+                          RepaintBoundary(
+                          key: repaintBoundaryKey,
+                          child: Stack(
+                            children: List<Widget>.generate(
+                              textOverlays.length,
+                                  (int index) => TextOverlay(
+                                textOverlayModel: textOverlays.elementAt(index),
+                                updateCallback: () => setState(() {}),
+                                devicePadding: MediaQuery.of(context).padding,
+                                onTap: (textOverlay) =>
+                                    startEditingTextOverlay(textOverlay),
+                                draggingCallback: (bool dragging) =>
+                                    setState(() => this.dragging = dragging),
                               ),
-                            )
-
-                          //  BackdropFilter(
-                          //     filter: ImageFilter.blur(
-                          //         sigmaX: 10.0, sigmaY: 10.0, tileMode: TileMode.clamp),
-                          //     child: Image.file(
-                          //       _image,
-                          //       height: height.toDouble(),
-                          //       width: width.toDouble(),
-                          //       fit: BoxFit.cover,
-                          //     ),
-                          //   )
-                          : Container(),
-                      AbsorbPointer(
-                        absorbing:!enableBrush,
-                          child: Signat().xGesture(
-                          onPanUpdate: (DragUpdateDetails details) {
-                              setState(() {
-                                //print("update");
-                                RenderBox object = context.findRenderObject();
-                                var _localPosition = object.globalToLocal(
-                                    details.globalPosition);
-                                _points = List.from(_points)
-                                  ..add(_localPosition);
-                              });
-
-                          },
-                          onPanEnd: (DragEndDetails details) {
-                            _points.add(null);
-                          },
-                        ).xContainer(padding: EdgeInsets.all(0.0)),
-                      ),
-                      xStack.list(
-                        widgetJson.asMap().entries.map((f) {
-                          return type[f.key] == 1
-                              ? EmojiView(
-                                  left: offsets[f.key].dx,
-                                  top: offsets[f.key].dy,
-                                  ontap: () {
-                                    if(showSlider){
-                                      showSlider=false;
-                                      Navigator.of(context).pop();
-                                    }else {
-                                      showSlider=true;
-                                      scaf.currentState.showBottomSheet((
-                                          context) {
-                                        return Sliders(
-                                          index: f.key,
-                                          mapValue: f.value,
-                                          onlySize: true,
-                                        );
-                                      });
-                                    }
-                                  },
-                                  /*onpanupdate: (details) {
-                                    setState(() {
-                                      offsets[f.key] =
-                                          Offset(offsets[f.key].dx + details.delta.dx, offsets[f.key].dy + details.delta.dy);
-                                    });
-                                  },*/
-                                  onscalestart:(details){
-                                    if(details.pointerCount==1){
-                                      oldScale=-1;
-                                      oldRotation= widgetJson[f.key]['rotation'];
-                                      oldOffset=offsets[f.key];
-                                      print("single");
-                                    }else {
-                                      oldScale = widgetJson[f.key]['size'];
-                                      oldRotation= widgetJson[f.key]['rotation'];
-                                    }
-                                          //oldScale=details.;
-                                  },
-                                  onscaleupdate: (details){
-                                    setState((){
-                                      if(oldScale==-1) {
-                                        print(details.localFocalPoint);
-                                        print(details.delta);
-                                        offsets[f.key] =
-                                            Offset(oldOffset.dx +
-                                                details.delta.dx,
-                                                oldOffset.dy +
-                                                    details.delta.dy);
-                                      }else {
-                                        widgetJson[f.key]['size'] =
-                                            oldScale * details.scale;
-                                      }
-                                      //print(oldRotation);
-                                      //print(details.rotation);
-                                        widgetJson[f.key]['rotation'] =
-                                            oldRotation + details.rotation;
-
-                                    });
-                                  },
-
-                                  mapJson: f.value,
-                                )
-
-                                  : Container();
-                        }).toList(),
-
-                      ),
-                      RepaintBoundary(
-                      key: repaintBoundaryKey,
-                      child: Stack(
-                        children: List<Widget>.generate(
-                          textOverlays.length,
-                              (int index) => TextOverlay(
-                            textOverlayModel: textOverlays.elementAt(index),
-                            updateCallback: () => setState(() {}),
-                            devicePadding: MediaQuery.of(context).padding,
-                            onTap: (textOverlay) =>
-                                startEditingTextOverlay(textOverlay),
-                            draggingCallback: (bool dragging) =>
-                                setState(() => this.dragging = dragging),
+                            ),
                           ),
                         ),
+                        ],
                       ),
-                    ),
-                    ],
-                  ),
-                )),
+                    )),
         ),
+                if(isWorking)
+                  Container(color: Colors.black38,child: Column(mainAxisSize: MainAxisSize.max,mainAxisAlignment: MainAxisAlignment.spaceEvenly,crossAxisAlignment: CrossAxisAlignment.stretch,children: [Text("Video in elaborazione...",style: TextStyle(color: Colors.white),),CircularProgressIndicator()],),)
+
+              ],
+            ),
           ),
       ),
     ).xCenter().xScaffold(
@@ -333,21 +381,50 @@ class _ImageEditorProState extends State<ImageEditorPro> {
           actions: <Widget>[
 
             'Salva'.text().xFlatButton(
-                primary: Colors.black,
+                primary: Colors.white,
                 onPressed: () {
-                  screenshotController.capture(pixelRatio: widget.pixelRatio ?? 1).then((binaryIntList) async {
-                    //print("Capture Done");
+                  if(widget.isImage) {
+                    screenshotController.capture(
+                        pixelRatio: widget.pixelRatio ?? 1).then((
+                        binaryIntList) async {
+                      //print("Capture Done");
 
-                    final paths = widget.pathSave ?? await getTemporaryDirectory();
+                      final paths = widget.pathSave ??
+                          await getTemporaryDirectory();
 
-                    final file = await File('${paths.path}/' + DateTime.now().toString() + '.jpg').create();
-                    print(file.path);
-                    file.writeAsBytesSync(binaryIntList);
-                    //file.copySync('${paths.path}/resized.jpg');
-                    Navigator.pop(context, file);
-                  }).catchError((onError) {
-                    print(onError);
-                  });
+                      final file = await File('${paths.path}/' + DateTime.now()
+                          .toString() + '.jpg').create();
+                      print(file.path);
+                      file.writeAsBytesSync(binaryIntList);
+                      //file.copySync('${paths.path}/resized.jpg');
+                      Navigator.pop(context, file);
+                    }).catchError((onError) {
+                      print(onError);
+                    });
+                  }else{
+                    screenshotController.capture(
+                        pixelRatio: widget.pixelRatio ?? 1).then((
+                        binaryIntList) async {
+                      //print("Capture Done");
+
+                      setState((){isWorking=true;});
+                      final paths = widget.pathSave ??
+                          await getTemporaryDirectory();
+
+                      final file = await File('${paths.path}/' + DateTime.now()
+                          .toString() + '.jpg').create();
+                      print(file.path);
+                      file.writeAsBytesSync(binaryIntList);
+                      final result=await _blendMedia(overlay: file,mediaFile: widget.defaultMedia);
+                      print(result.existsSync());
+                      setState((){isWorking=false;});
+
+                      Navigator.pop(context, result);
+
+                    }).catchError((onError) {
+                      print(onError);
+                    });
+                  }
                 })
           ],
           brightness: Brightness.dark,
@@ -705,7 +782,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                 ).xContainer(
                   onTap: () async {
                     var image = await picker.getImage(source: ImageSource.gallery);
-                    await loadImage(File(image.path));
+                    await loadMedia(File(image.path));
                     Navigator.pop(context);
                   },
                 ),
@@ -723,7 +800,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                   setState(() {
                     height = decodedImage.height;
                     width = decodedImage.width;
-                    _image = File(image.path);
+                    media = File(image.path);
                   });
                   setState(() => _controller.clear());
                   Navigator.pop(context);
@@ -745,16 +822,28 @@ class _ImageEditorProState extends State<ImageEditorPro> {
     future.then((void value) => _closeModal(value));
   }
 
-  Future<void> loadImage(File imageFile) async {
-    final decodedImage = await decodeImageFromList(imageFile.readAsBytesSync());
-    setState(() {
-      height = decodedImage.height;
-      width = decodedImage.width;
-      print(height);
-      print(width);
-      _image = imageFile;
-      _controller.clear();
-    });
+  Future<void> loadMedia(File file) async {
+    if(widget.isImage) {
+      final decodedImage = await decodeImageFromList(file.readAsBytesSync());
+      setState(() {
+        height = decodedImage.height;
+        width = decodedImage.width;
+        //print(height);
+        //print(width);
+        media = file;
+      });
+    }else{
+
+      videoController = VideoPlayerController.file(file);//Your file here
+      await videoController.initialize();
+      await videoController.setLooping(true);
+      await videoController.play();
+      height=videoController.value.size.height.floor();
+      width=videoController.value.size.width.floor();
+      setState((){});
+    }
+    _controller.clear();
+
   }
 
   void _closeModal(void value) {
@@ -805,14 +894,14 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                     Navigator.pop(context);
                   },
                   onCancel: () {
-                    print("onCane ${currentOverlay.id} ");
+                    //print("onCane ${currentOverlay.id} ");
                     //widgetJson.removeWhere((element) => element['id'] == currentOverlay.id);
                     textOverlays.removeWhere(
                             (element) =>element.id == currentOverlay.id);
                     stopEditingTextOverlay();
                     Navigator.of(context).pop();
                   },
-                  doneText: "OK",
+                  doneText: 'OK',
                 ),
               ),
             ),
@@ -825,7 +914,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
       setState(() => textOverlays.add(newTextOverlay));
 
   void startEditingTextOverlay(TextOverlayModel textOverlay) {
-    debugPrint("Cominciamo ad editare il testo sopra una storia / reel.");
+    debugPrint('Cominciamo ad editare il testo sopra una storia / reel.');
 
     if (textOverlay != null) {
       currentOverlay = textOverlay;
@@ -833,7 +922,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
     } else
       currentOverlay = TextOverlayModel(
         id: randomAlphaNumeric(20),
-        text: "",
+        text: '',
         textStyle: defaultOverlayTextStyle,
         offset: null,
       );
@@ -845,6 +934,19 @@ class _ImageEditorProState extends State<ImageEditorPro> {
     this.currentOverlay = null;
     this.showTextOverlay = false;
     setState(() {});
+  }
+
+  static Future<File> _blendMedia({@required File mediaFile,@required File overlay,}) async {
+      final ffmpeg = FlutterFFmpeg();
+      final outputPath = mediaFile.path.substring(0, mediaFile.path.lastIndexOf('.')) + '-blended.mp4';
+
+      await ffmpeg.execute(// -pix_fmt yuv420p
+          '-y -i \"${mediaFile.path}\" -i \"${overlay.path}\" -filter_complex \"[0:v][1:v] overlay=0:0\" -c:a copy \"$outputPath\"');
+
+      print(mediaFile.path);
+
+      return File(mediaFile.path.replaceAll('.mp4', '-blended.mp4'));
+
   }
 }
 
