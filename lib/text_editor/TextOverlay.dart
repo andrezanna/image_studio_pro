@@ -11,6 +11,7 @@ class TextOverlay extends StatefulWidget {
   final EdgeInsets devicePadding;
   final Function(TextOverlayModel) onTap;
   final Function(bool) draggingCallback;
+  final GlobalKey parentWidgetKey;
 
   TextOverlay({
     Key key,
@@ -19,6 +20,7 @@ class TextOverlay extends StatefulWidget {
     @required this.devicePadding,
     @required this.onTap,
     @required this.draggingCallback,
+    this.parentWidgetKey,
   }) : super(key: key);
 
   @override
@@ -44,23 +46,25 @@ class _TextOverlayState extends State<TextOverlay> with AfterLayoutMixin<TextOve
   }
 
   Widget buildMainChild(double padding, GlobalKey childKey) {
+    final box = widget.parentWidgetKey.currentContext.findRenderObject() as RenderBox;
+
     Widget movableChild = Container(
       //color: Colors.green,
-      //width: MediaQuery.of(context).size.width,
+      width: box.size.width,
       child: Padding(
         padding: EdgeInsets.all(padding),
         child: Transform(
           transform: Matrix4.diagonal3(vector.Vector3(scale ?? widget.textOverlayModel.scale, scale ?? widget.textOverlayModel.scale, scale ?? widget.textOverlayModel.scale))
             ..rotateZ(rotation ?? widget.textOverlayModel.rotation),
+          alignment: FractionalOffset.center,
           child: Text(
-            this.widget.textOverlayModel.text,
-            style: this.widget.textOverlayModel.textStyle,
+            widget.textOverlayModel.text,
+            style: widget.textOverlayModel.textStyle,
             softWrap: true,
-            textAlign: this.widget.textOverlayModel.align,
+            textAlign: widget.textOverlayModel.align,
             maxLines: 15,
 
           ),
-          alignment: FractionalOffset.center,
         ),
       ),
     );
@@ -78,12 +82,12 @@ class _TextOverlayState extends State<TextOverlay> with AfterLayoutMixin<TextOve
         widget.draggingCallback(true);
         setState(() {});
       },*/
-      onVerticalDragUpdate: (details){
+      /*onVerticalDragUpdate: (details){
 
         widget.textOverlayModel.offset = Offset(details.globalPosition.dx,details.globalPosition.dy);
         widget.draggingCallback(true);
         setState(() {});
-      },
+      },*/
       onScaleUpdate: (ScaleUpdateDetails details) {
         scale = widget.textOverlayModel.scale * details.scale;
         rotation = widget.textOverlayModel.rotation + details.rotation;
@@ -110,21 +114,31 @@ class _TextOverlayState extends State<TextOverlay> with AfterLayoutMixin<TextOve
   }
 
   Offset reconsiderFocalPoint(Offset focalPoint, [bool add = false]) {
+    final box = widget.parentWidgetKey.currentContext.findRenderObject() as RenderBox;
+    final pos = box.localToGlobal(Offset.zero);
+    /*print("############");
+    print(box.size.width);
+    print(box.size.height);
+    print(-box.size.width/2);
+    print(box.size.height/2-84);
+    print(focalPoint.toString());
+    print("--------------");*/
+    //print(focalPoint.toString());
     /*
       left: widget.textOverlayModel.offset.dx - widget.devicePadding.top - (lastWidgetSize?.height ?? 0.0 / 2),
       top: widget.textOverlayModel.offset.dy - (lastWidgetSize?.width ?? 0.0 / 2),
      */
     //print(focalPoint.toString());
     //return focalPoint;
-    if (add) {
+    if (widget.textOverlayModel.offset==null) {
       return Offset(
-        focalPoint.dx+200 - ((lastWidgetSize?.width ?? 0.0) /2),
-        focalPoint.dy+90 - ((lastWidgetSize?.height ?? 0.0) /2),
+          focalPoint.dx-box.size.width/2-pos.dx,
+          focalPoint.dy-pos.dy
       );
     } else {
       return Offset(
-        focalPoint.dx-50 - ((lastWidgetSize?.width ?? 0.0) /2),
-        focalPoint.dy-90 - ((lastWidgetSize?.height ?? 0.0) /2),
+          focalPoint.dx-box.size.width/2-pos.dx,
+          focalPoint.dy-pos.dy
       );
     }
   }

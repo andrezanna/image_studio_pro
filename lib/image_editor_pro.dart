@@ -185,188 +185,191 @@ class _ImageEditorProState extends State<ImageEditorPro> {
 
               children: [
                 !widget.isImage?
-                Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.rotationY(flipValue),
-                  child: ClipRect(
-                    // <-- clips to the 200x200 [Container] below
+                Center(
+                  child: Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.rotationY(flipValue),
+                    child: ClipRect(
+                      // <-- clips to the 200x200 [Container] below
 
-                    child: Container(
-                        padding: EdgeInsets.zero,
-                        // alignment: Alignment.center,
-                        //width: width.toDouble(),
-                        //height: height.toDouble(),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(
-                            sigmaX: blurValue,
-                            sigmaY: blurValue,
-                          ),
-                          child: Container(
-                            color: colorValue.withOpacity(opacityValue),
-                            child: AspectRatio(
-                              aspectRatio: videoController.value.aspectRatio,
-                              child: VideoPlayer(videoController,
+                      child: Container(
+                          padding: EdgeInsets.zero,
+                          // alignment: Alignment.center,
+                          //width: width.toDouble(),
+                          //height: height.toDouble(),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(
+                              sigmaX: blurValue,
+                              sigmaY: blurValue,
+                            ),
+                            child: Container(
+                              color: colorValue.withOpacity(opacityValue),
+                              child: AspectRatio(
+                                aspectRatio: videoController.value.aspectRatio,
+                                child: VideoPlayer(videoController,
+                                ),
                               ),
                             ),
-                          ),
-                        )),
+                          )),
+                    ),
                   ),
                 ):Container(),
-                Screenshot(
+                Center(
+                  child: AspectRatio(
+                    aspectRatio: width/height,
+                    child: Screenshot(
         controller: screenshotController,
         child:RepaintBoundary(
-                    key: globalKey,
-                    child: AspectRatio(
-                      aspectRatio: width/height,
-                      child: xStack.list(
-                        [
-                          widget.isImage && media != null
-                              ? Center(
-                                child: Transform(
-                                    alignment: Alignment.center,
-                                    transform: Matrix4.rotationY(flipValue),
-                                    child: ClipRect(
-                                      // <-- clips to the 200x200 [Container] below
+                        key: globalKey,
+                        child: xStack.list(
+                          [
+                            widget.isImage && media != null
+                                ? Center(
 
-                                      child: media.path.decorationIFToContain().xContainer(
-                                          padding: EdgeInsets.zero,
-                                          // alignment: Alignment.center,
-                                          //width: width.toDouble(),
-                                          //height: height.toDouble(),
-                                          child: BackdropFilter(
-                                            filter: ImageFilter.blur(
-                                              sigmaX: blurValue,
-                                              sigmaY: blurValue,
-                                            ),
-                                            child: Container(
-                                              color: colorValue.withOpacity(opacityValue),
-                                            ),
-                                          )),
-                                    ),
-                                  ),
-                              )
+                                    child: Transform(
+                                        alignment: Alignment.center,
+                                        transform: Matrix4.rotationY(flipValue),
+                                        child: ClipRect(
+                                          // <-- clips to the 200x200 [Container] below
 
-                              //  BackdropFilter(
-                              //     filter: ImageFilter.blur(
-                              //         sigmaX: 10.0, sigmaY: 10.0, tileMode: TileMode.clamp),
-                              //     child: Image.file(
-                              //       _image,
-                              //       height: height.toDouble(),
-                              //       width: width.toDouble(),
-                              //       fit: BoxFit.cover,
-                              //     ),
-                              //   )
+                                          child: media.path.decorationIFToContain().xContainer(
+                                              padding: EdgeInsets.zero,
+                                              // alignment: Alignment.center,
+                                              //width: width.toDouble(),
+                                              //height: height.toDouble(),
+                                              child: BackdropFilter(
+                                                filter: ImageFilter.blur(
+                                                  sigmaX: blurValue,
+                                                  sigmaY: blurValue,
+                                                ),
+                                                child: Container(
+                                                  color: colorValue.withOpacity(opacityValue),
+                                                ),
+                                              )),
+                                        ),
+                                      ),
+                                  )
 
-                              : Container(),
-                          AbsorbPointer(
-                            absorbing:!enableBrush,
-                              child: Signat().xGesture(
-                              onPanUpdate: (DragUpdateDetails details) {
-                                  setState(() {
-                                    //print("update");
-                                    RenderBox object = context.findRenderObject();
-                                    var _localPosition = object.globalToLocal(
-                                        details.globalPosition);
-                                    _points = List.from(_points)
-                                      ..add(_localPosition);
-                                  });
 
-                              },
-                              onPanEnd: (DragEndDetails details) {
-                                _points.add(null);
-                              },
-                            ).xContainer(padding: EdgeInsets.all(0.0)),
-                          ),
-                          xStack.list(
-                            widgetJson.asMap().entries.map((f) {
-                              return type[f.key] == 1
-                                  ? EmojiView(
-                                      left: offsets[f.key].dx,
-                                      top: offsets[f.key].dy,
-                                      ontap: () {
-                                        if(showSlider){
-                                          showSlider=false;
-                                          Navigator.of(context).pop();
-                                        }else {
-                                          showSlider=true;
-                                          scaf.currentState.showBottomSheet((
-                                              context) {
-                                            return Sliders(
-                                              index: f.key,
-                                              mapValue: f.value,
-                                              onlySize: true,
-                                            );
-                                          });
-                                        }
-                                      },
-                                      /*onpanupdate: (details) {
-                                        setState(() {
-                                          offsets[f.key] =
-                                              Offset(offsets[f.key].dx + details.delta.dx, offsets[f.key].dy + details.delta.dy);
-                                        });
-                                      },*/
-                                      onscalestart:(details){
-                                        if(details.pointerCount==1){
-                                          oldScale=-1;
-                                          oldRotation= widgetJson[f.key]['rotation'];
-                                          oldOffset=offsets[f.key];
-                                          //print("single");
-                                        }else {
-                                          oldScale = widgetJson[f.key]['size'];
-                                          oldRotation= widgetJson[f.key]['rotation'];
-                                        }
-                                              //oldScale=details.;
-                                      },
-                                      onscaleupdate: (details){
-                                        setState((){
-                                          if(oldScale==-1) {
-                                            //print(details.localFocalPoint);
-                                            //print(details.delta);
+                                //  BackdropFilter(
+                                //     filter: ImageFilter.blur(
+                                //         sigmaX: 10.0, sigmaY: 10.0, tileMode: TileMode.clamp),
+                                //     child: Image.file(
+                                //       _image,
+                                //       height: height.toDouble(),
+                                //       width: width.toDouble(),
+                                //       fit: BoxFit.cover,
+                                //     ),
+                                //   )
+
+                                : Container(),
+                            AbsorbPointer(
+                              absorbing:!enableBrush,
+                                child: Signat().xGesture(
+                                onPanUpdate: (DragUpdateDetails details) {
+                                    setState(() {
+                                      //print("update");
+                                      RenderBox object = context.findRenderObject();
+                                      var _localPosition = object.globalToLocal(
+                                          details.globalPosition);
+                                      _points = List.from(_points)
+                                        ..add(_localPosition);
+                                    });
+
+                                },
+                                onPanEnd: (DragEndDetails details) {
+                                  _points.add(null);
+                                },
+                              ).xContainer(padding: EdgeInsets.all(0.0)),
+                            ),
+                            xStack.list(
+                              widgetJson.asMap().entries.map((f) {
+                                return type[f.key] == 1
+                                    ? EmojiView(
+                                        left: offsets[f.key].dx,
+                                        top: offsets[f.key].dy,
+                                        ontap: () {
+
+                                            scaf.currentState.showBottomSheet((
+                                                context) {
+                                              return Sliders(
+                                                index: f.key,
+                                                mapValue: f.value,
+                                                onlySize: true,
+                                              );
+                                            });
+
+                                        },
+                                        /*onpanupdate: (details) {
+                                          setState(() {
                                             offsets[f.key] =
-                                                Offset(oldOffset.dx +
-                                                    details.delta.dx,
-                                                    oldOffset.dy +
-                                                        details.delta.dy);
+                                                Offset(offsets[f.key].dx + details.delta.dx, offsets[f.key].dy + details.delta.dy);
+                                          });
+                                        },*/
+                                        onscalestart:(details){
+                                          if(details.pointerCount==1){
+                                            oldScale=-1;
+                                            oldRotation= widgetJson[f.key]['rotation'];
+                                            oldOffset=offsets[f.key];
+                                            //print("single");
                                           }else {
-                                            widgetJson[f.key]['size'] =
-                                                oldScale * details.scale;
+                                            oldScale = widgetJson[f.key]['size'];
+                                            oldRotation= widgetJson[f.key]['rotation'];
                                           }
-                                          //print(oldRotation);
-                                          //print(details.rotation);
-                                            widgetJson[f.key]['rotation'] =
-                                                oldRotation + details.rotation;
+                                                //oldScale=details.;
+                                        },
+                                        onscaleupdate: (details){
+                                          setState((){
+                                            if(oldScale==-1) {
+                                              //print(details.localFocalPoint);
+                                              //print(details.delta);
+                                              offsets[f.key] =
+                                                  Offset(oldOffset.dx +
+                                                      details.delta.dx,
+                                                      oldOffset.dy +
+                                                          details.delta.dy);
+                                            }else {
+                                              widgetJson[f.key]['size'] =
+                                                  oldScale * details.scale;
+                                            }
+                                            //print(oldRotation);
+                                            //print(details.rotation);
+                                              widgetJson[f.key]['rotation'] =
+                                                  oldRotation + details.rotation;
 
-                                        });
-                                      },
+                                          });
+                                        },
 
-                                      mapJson: f.value,
-                                    )
+                                        mapJson: f.value,
+                                      )
 
-                                      : Container();
-                            }).toList(),
+                                        : Container();
+                              }).toList(),
 
-                          ),
-                          RepaintBoundary(
-                          key: repaintBoundaryKey,
-                          child: Stack(
-                            children: List<Widget>.generate(
-                              textOverlays.length,
-                                  (int index) => TextOverlay(
-                                textOverlayModel: textOverlays.elementAt(index),
-                                updateCallback: () => setState(() {}),
-                                devicePadding: MediaQuery.of(context).padding,
-                                onTap: (textOverlay) =>
-                                    startEditingTextOverlay(textOverlay),
-                                draggingCallback: (bool dragging) =>
-                                    setState(() => this.dragging = dragging),
+                            ),
+                            RepaintBoundary(
+                            key: repaintBoundaryKey,
+                            child: Stack(
+                              children: List<Widget>.generate(
+                                textOverlays.length,
+                                    (int index) => TextOverlay(
+                                  textOverlayModel: textOverlays.elementAt(index),
+                                  updateCallback: () => setState(() {}),
+                                  devicePadding: EdgeInsets.zero,//MediaQuery.of(context).padding,
+                                  onTap: (textOverlay) =>
+                                      startEditingTextOverlay(textOverlay),
+                                  draggingCallback: (bool dragging) =>
+                                      setState(() => this.dragging = dragging),
+                                      parentWidgetKey: globalKey,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        ],
-                      ),
-                    )),
+                          ],
+                        )),
+                  ),
         ),
+                ),
                 if(isWorking)
                   Container(color: Colors.black38,child: Column(mainAxisSize: MainAxisSize.max,mainAxisAlignment: MainAxisAlignment.spaceEvenly,crossAxisAlignment: CrossAxisAlignment.stretch,children: [Text("Video in elaborazione...",style: TextStyle(color: Colors.white),),CircularProgressIndicator()],),)
 
@@ -385,7 +388,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                 onPressed: () {
                   if(widget.isImage) {
                     screenshotController.capture(
-                        pixelRatio: widget.pixelRatio ?? 1).then((
+                        pixelRatio: MediaQuery.of(context).devicePixelRatio).then((
                         binaryIntList) async {
                       //print("Capture Done");
 
@@ -403,7 +406,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                     });
                   }else{
                     screenshotController.capture(
-                        pixelRatio: widget.pixelRatio ?? 1).then((
+                        pixelRatio: MediaQuery.of(context).devicePixelRatio).then((
                         binaryIntList) async {
                       //print("Capture Done");
 
@@ -593,9 +596,14 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                           });
                       getemojis.then((value) {
                         if (value['name'] != null) {
+                          final box = globalKey.currentContext.findRenderObject() as RenderBox;
+                          print(box.size.width);
+                          print(box.size.height);
+                          print(box.size.width/2-84);
+                          print(box.size.height/2-84);
                           type.add(1);
                           widgetJson.add(value);
-                          offsets.add(Offset(150,150));
+                          offsets.add(Offset(box.size.width/2-84,box.size.height/2-84));
                           //  multiwidget.add(value);
                           howmuchwidgetis++;
                         }
@@ -874,12 +882,15 @@ class _ImageEditorProState extends State<ImageEditorPro> {
                   textStyle: overlay.textStyle,
                   textAlingment: overlay.align,
                   onEditCompleted: (style, align, text) {
+                    final box = globalKey.currentContext.findRenderObject() as RenderBox;
+                    final pos = box.localToGlobal(Offset.zero);
+
                     currentOverlay.text = text;
                     currentOverlay.textStyle = style;
                     currentOverlay.align = align;
                     currentOverlay.offset ??= Offset(
-                      MediaQuery.of(context).size.width / 2,
-                      MediaQuery.of(context).size.height / 2,
+                      box.size.width/2+pos.dx,
+                      box.size.height/ 2+pos.dy,
                     );
 
                       //type.add(2);
@@ -919,33 +930,34 @@ class _ImageEditorProState extends State<ImageEditorPro> {
     if (textOverlay != null) {
       currentOverlay = textOverlay;
       textOverlays.removeWhere((element) => element.id == currentOverlay.id);
-    } else
+    } else {
       currentOverlay = TextOverlayModel(
         id: randomAlphaNumeric(20),
         text: '',
         textStyle: defaultOverlayTextStyle,
         offset: null,
       );
+    }
 
     _tapHandler(currentOverlay);
   }
 
   void stopEditingTextOverlay() {
-    this.currentOverlay = null;
-    this.showTextOverlay = false;
+    currentOverlay = null;
+    showTextOverlay = false;
     setState(() {});
   }
 
   static Future<File> _blendMedia({@required File mediaFile,@required File overlay,}) async {
       final ffmpeg = FlutterFFmpeg();
       final outputPath = mediaFile.path.substring(0, mediaFile.path.lastIndexOf('.')) + '-blended.mp4';
-
+      print('ffmpeg -y -i \"${mediaFile.path}\" -i \"${overlay.path}\" -filter_complex \"[0:v][1:v] overlay=0:0\" -c:a copy \"$outputPath\"');
       await ffmpeg.execute(// -pix_fmt yuv420p
-          '-y -i \"${mediaFile.path}\" -i \"${overlay.path}\" -filter_complex \"[0:v][1:v] overlay=0:0\" -c:a copy \"$outputPath\"');
+          '-y -i \"${mediaFile.path}\" -i \"${overlay.path}\"  -filter_complex \"[1:v]scale=$width:$height [ovrl],[0:v][ovrl]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2\" -qscale 0 -c:a copy \"$outputPath\"');
 
-      print(mediaFile.path);
+      print(outputPath);
 
-      return File(mediaFile.path.replaceAll('.mp4', '-blended.mp4'));
+      return File(outputPath);
 
   }
 }

@@ -25,6 +25,7 @@ class _HomePageState extends State<HomePage> {
   final controllerDefaultImage = TextEditingController();
   File _defaultImage;
   File _image;
+  bool isImage=true;
   VideoPlayerController videoController;
 
   Future<void> getimageditor() => Navigator.push(context, MaterialPageRoute(builder: (context) {
@@ -33,25 +34,23 @@ class _HomePageState extends State<HomePage> {
           bottomBarColor: Colors.black87,
           pathSave: null,
           defaultMedia: _defaultImage,
-          isImage: false,
+          isImage: isImage,
         );
       })).then((geteditimage)async{
         if (geteditimage != null) {
           try {
-            Share.shareFiles([geteditimage.path]);
             print('BOBOBOBOBOBOBOB##################################');
-            videoController = VideoPlayerController.file(geteditimage);
-            if ((geteditimage as File).existsSync()) {
-              print(geteditimage.path);
+            //isImage=true;
+            if(!isImage) {
+              videoController = VideoPlayerController.file(geteditimage);
+              if ((geteditimage as File).existsSync()) {
+                print(geteditimage.path);
+              }
             }
             setState(() {
               _image = geteditimage;
               print("MALALAAAAAAAAAAAAA ${_image.toString()}");
             });
-            await videoController.initialize();
-
-            
-            videoController.play();
           }catch(e){
             print("ERRRRRRR"+e);
           }
@@ -77,13 +76,24 @@ class _HomePageState extends State<HomePage> {
                   16.0.sizedHeight(),
                   'Set Default Image'.text().xRaisedButton(
                     onPressed: () async {
-                      final imageGallery = await ImagePicker().getVideo(source: ImageSource.gallery);
+                      final imageGallery = await ImagePicker().getImage(source: ImageSource.gallery);
                       if (imageGallery != null) {
+                        isImage=true;
                         _defaultImage = File(imageGallery.path);
                         setState(() => controllerDefaultImage.text = _defaultImage.path);
                       }
                     },
                   ),
+              'Set Default Video'.text().xRaisedButton(
+                onPressed: () async {
+                  final imageGallery = await ImagePicker().getVideo(source: ImageSource.gallery);
+                  if (imageGallery != null) {
+                    isImage=false;
+                    _defaultImage = File(imageGallery.path);
+                    setState(() => controllerDefaultImage.text = _defaultImage.path);
+                  }
+                },
+              ),
                   'Open Editor'.text().xRaisedButton(
                     onPressed: () {
                       getimageditor();
@@ -92,13 +102,16 @@ class _HomePageState extends State<HomePage> {
                 ])
                 .xCenter()
                 .xap(value: 16),
-            isFalse: _image == null ? Container() : VideoPlayer(videoController).toCenter())
+            isFalse: _image == null ? Container() : Center(child: Container(color: Colors.black,child: isImage?Image.file(_image): AspectRatio(aspectRatio: videoController.value.aspectRatio,child: VideoPlayer(videoController).toCenter()))))
         .xScaffold(
-      appBar: 'Image Editor Pro example'.xTextColorWhite().xAppBar(),
+      appBar: 'Image Editor Pro example'.xTextColorWhite().xAppBar(leading:InkWell(onTap: (){setState(() {
+        _image=null;
+      });},child: Text("BACK"),)),
       floatingActionButton: Icons.add.xIcons().xFloationActiobButton(
             color: Colors.red,
-            onTap: () {
-              videoController.play();
+            onTap: () async{
+              await videoController.initialize();
+              await videoController.play();
 // TODO: I don't know what I'm doing in here
             },
           ),

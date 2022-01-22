@@ -13,26 +13,25 @@ dependencies:
   zoom_widget: ^0.2.1
   font_awesome_flutter: ^9.2.0
   image_picker: ^0.8.4+4
-  path_provider: any
+  path_provider:
   permission_handler: ^8.3.0
-  dio: any
-  screenshot: any
-  signature: any
+  dio:
+  screenshot: ^1.2.3
+  signature:
   flutter_colorpicker: ^1.0.3
-  firexcode: any
+  firexcode:
   json_ast: 1.0.5
   collection: ^1.15.0
   text_editor:
     git: https://github.com/emiliodallatorre/text-editor.git
-  after_layout: any
-  random_string: any
-  video_player: any
+  after_layout:
+  random_string:
+  video_player:
   flutter_ffmpeg: ^0.4.2
-  photo_manager: any
+  photo_manager:
 
 dev_dependencies:
-  pedantic: ^1.11.1
-
+  lints:
   flutter_test:
     sdk: flutter
 
