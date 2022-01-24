@@ -371,7 +371,7 @@ class _ImageEditorProState extends State<ImageEditorPro> {
         ),
                 ),
                 if(isWorking)
-                  Container(color: Colors.black38,child: Column(mainAxisSize: MainAxisSize.max,mainAxisAlignment: MainAxisAlignment.spaceEvenly,crossAxisAlignment: CrossAxisAlignment.stretch,children: [Text("Video in elaborazione...",style: TextStyle(color: Colors.white),),CircularProgressIndicator()],),)
+                  Center(child: Container(width:double.infinity,color: Colors.black54,child: Column(mainAxisSize: MainAxisSize.max,mainAxisAlignment: MainAxisAlignment.spaceEvenly,crossAxisAlignment: CrossAxisAlignment.center,children: [Text("Video in elaborazione...",style: TextStyle(color: Colors.white),),CircularProgressIndicator()],),))
 
               ],
             ),
@@ -951,9 +951,9 @@ class _ImageEditorProState extends State<ImageEditorPro> {
   static Future<File> _blendMedia({@required File mediaFile,@required File overlay,}) async {
       final ffmpeg = FlutterFFmpeg();
       final outputPath = mediaFile.path.substring(0, mediaFile.path.lastIndexOf('.')) + '-blended.mp4';
-      print('ffmpeg -y -i \"${mediaFile.path}\" -i \"${overlay.path}\" -filter_complex \"[0:v][1:v] overlay=0:0\" -c:a copy \"$outputPath\"');
+      print('ffmpeg -y -i \"${mediaFile.path}\" -i \"${overlay.path}\" -filter_complex \"[0:v][1:v] overlay=0:0\" -c:v copy -c:a copy \"$outputPath\"');
       await ffmpeg.execute(// -pix_fmt yuv420p
-          '-y -i \"${mediaFile.path}\" -i \"${overlay.path}\"  -filter_complex \"[1:v]scale=$width:$height [ovrl],[0:v][ovrl]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2\" -qscale 0 -c:a copy \"$outputPath\"');
+          '-y -i \"${mediaFile.path}\" -i \"${overlay.path}\"  -filter_complex \"[1:v]scale=$width:$height [ovrl],[0:v][ovrl]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2\" -qscale 0 -c:v copy -c:a copy \"$outputPath\"');
 
       print(outputPath);
 
