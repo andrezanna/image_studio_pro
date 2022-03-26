@@ -4,13 +4,25 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="60ea1f31-da9d-4cdb-b4dd-df299f338ddb" name="Default Changelist" comment="editing video">
+    <list default="true" id="60ea1f31-da9d-4cdb-b4dd-df299f338ddb" name="Default Changelist" comment="fix dimesnione e posizione overlay video&#10;fix spostamento e posizione iniziale emoji e testo">
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/example/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/example/lib/main.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/example/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/example/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/example/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/example/windows/flutter/generated_plugin_registrant.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/example/windows/flutter/generated_plugins.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/image_editor_pro.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/image_editor_pro.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/text_editor/TextOverlay.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/text_editor/TextOverlay.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/modules/all_emojies.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/modules/all_emojies.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/modules/bottombar_container.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/modules/bottombar_container.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/modules/color_piskers_slider.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/modules/color_piskers_slider.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/modules/colors_picker.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/modules/colors_picker.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/modules/emoji.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/modules/emoji.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/modules/sliders.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/modules/sliders.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/modules/text.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/modules/text.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/modules/textview.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/modules/textview.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/modules/view_save_image.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/modules/view_save_image.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
@@ -19,7 +31,6 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[R3CRB09FD0M]" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -29,10 +40,13 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="RunOnceActivity.cidr.known.project.marker" value="true" />
+    <property name="cidr.known.project.marker" value="true" />
     <property name="dart.analysis.tool.window.force.activate" value="true" />
     <property name="dart.analysis.tool.window.visible" value="false" />
     <property name="io.flutter.reload.alreadyRun" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="flutter.settings" />
     <property name="show.migrate.to.gradle.popup" value="false" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -68,7 +82,35 @@
       <option name="project" value="LOCAL" />
       <updated>1642841057993</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="fix dimesnione e posizione overlay video&#10;fix spostamento e posizione iniziale emoji e testo">
+      <created>1642853134458</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1642853134458</updated>
+    </task>
+    <task id="LOCAL-00005" summary="copy video codec">
+      <created>1643016223871</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1643016223871</updated>
+    </task>
+    <task id="LOCAL-00006" summary="removed copy video codec">
+      <created>1643019442318</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1643019442318</updated>
+    </task>
+    <task id="LOCAL-00007" summary="removed copy video codec">
+      <created>1643026263490</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1643026263490</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -86,6 +128,9 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="text editor&#10;rotazione emoji" />
     <MESSAGE value="editing video" />
-    <option name="LAST_COMMIT_MESSAGE" value="editing video" />
+    <MESSAGE value="fix dimesnione e posizione overlay video&#10;fix spostamento e posizione iniziale emoji e testo" />
+    <MESSAGE value="copy video codec" />
+    <MESSAGE value="removed copy video codec" />
+    <option name="LAST_COMMIT_MESSAGE" value="removed copy video codec" />
   </component>
 </project>

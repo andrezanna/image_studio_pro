@@ -1,4 +1,5 @@
-import 'package:firexcode/firexcode.dart';
+
+import 'package:flutter/material.dart';
 
 class EmojiView extends StatefulWidget {
   final double left;
@@ -49,7 +50,7 @@ class _EmojiViewState extends State<EmojiView> {
         ),
       ),
     );
-    return widget.mapJson['name']
+    /*return widget.mapJson['name']
         .toString()
         .text(
             textAlign: widget.mapJson['align'],
@@ -66,6 +67,6 @@ class _EmojiViewState extends State<EmojiView> {
         .xPositioned(
           left: widget.left,
           top: widget.top,
-        );
+        );*/
   }
 }

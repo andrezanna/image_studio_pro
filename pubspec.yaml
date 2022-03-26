@@ -9,25 +9,25 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.3
-  zoom_widget: ^0.2.1
-  font_awesome_flutter: ^9.2.0
-  image_picker: ^0.8.4+4
+  cupertino_icons:
+  zoom_widget:
+  font_awesome_flutter:
+  image_picker:
   path_provider:
-  permission_handler: ^8.3.0
+  permission_handler:
   dio:
-  screenshot: ^1.2.3
+  screenshot:
   signature:
-  flutter_colorpicker: ^1.0.3
-  firexcode:
-  json_ast: 1.0.5
+  flutter_colorpicker:
+  #firexcode:
+  #json_ast: 1.0.5
   collection: ^1.15.0
   text_editor:
     git: https://github.com/emiliodallatorre/text-editor.git
   after_layout:
   random_string:
   video_player:
-  flutter_ffmpeg: ^0.4.2
+  flutter_ffmpeg:
   photo_manager:
 
 dev_dependencies:

@@ -1,5 +1,6 @@
 import 'dart:math';
-import 'package:firexcode/firexcode.dart';
+
+import 'package:flutter/material.dart';
 
 enum PickMode {
   Color,
@@ -115,19 +116,21 @@ class _BarColorPickerState extends State<BarColorPicker> {
       thumbTop = barHeight * percent;
     }
     // build thumb
-    var thumb = XContainer(
-      padding: EdgeInsets.zero,
-      width: thumbRadius * 2,
-      height: thumbRadius * 2,
-      shadowColor: _kThumbShadowColor,
-      spreadRadius: 2,
-      blurRadius: 3,
-      color: widget.thumbColor,
-      rounded: thumbRadius,
-    ).xPositioned(
-      left: thumbLeft,
-      top: thumbTop,
-    );
+    var thumb = Positioned(
+        left: thumbLeft,
+        top: thumbTop,
+        child: Container(
+          padding: EdgeInsets.zero,
+          width: thumbRadius * 2,
+          height: thumbRadius * 2,
+          color: widget.thumbColor,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(thumbRadius),
+              boxShadow: [
+                BoxShadow(
+                    color: _kThumbShadowColor, spreadRadius: 2, blurRadius: 3)
+              ]),
+        ));
 
     // build frame
     double frameWidth, frameHeight;
@@ -155,23 +158,25 @@ class _BarColorPickerState extends State<BarColorPicker> {
       left = (thumbRadius * 2 - barWidth) / 2;
       top = thumbRadius;
     }
-    var content = XContainerGradient(
-      padding: EdgeInsets.zero,
-      width: barWidth,
-      height: barHeight,
-      rounded: widget.cornerRadius,
-      gradient: gradient,
-      child: ''.text(),
-    ).xPositioned(
-      left: left,
-      top: top,
-    );
+    var content = Positioned(
+        left: left,
+        top: top,
+        child: Container(
+          padding: EdgeInsets.zero,
+          width: barWidth,
+          height: barHeight,
+          child: Text(''),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(widget.cornerRadius),
+          ),
+        ));
 
-    return xStack.list([frame, content, thumb]).xGesture(
-      onPanDown: (details) => handleTouch(details.globalPosition, context),
-      onPanStart: (details) => handleTouch(details.globalPosition, context),
-      onPanUpdate: (details) => handleTouch(details.globalPosition, context),
-    );
+    return GestureDetector(
+        onPanDown: (details) => handleTouch(details.globalPosition, context),
+        onPanStart: (details) => handleTouch(details.globalPosition, context),
+        onPanUpdate: (details) => handleTouch(details.globalPosition, context),
+        child: Stack(children: [frame, content, thumb]));
   }
 
   /// calculate colors picked from palette and update our states.
@@ -271,43 +276,47 @@ class _CircleColorPickerState extends State<CircleColorPicker> {
 
     // build thumb widget
     Widget thumb = Positioned(
-        child: XContainer(
-      padding: EdgeInsets.zero,
-      width: thumbRadius * 2,
-      height: thumbRadius * 2,
-      shadowColor: _kThumbShadowColor,
-      spreadRadius: 2,
-      blurRadius: 3,
-      color: widget.thumbColor,
-      rounded: thumbRadius,
-    ).xPositioned(
-      left: thumbCenterX,
-      top: thumbCenterY,
-    ));
-    return xStack.list(
-      [
-        SizedBox(
-            width: (radius + thumbRadius) * 2,
-            height: (radius + thumbRadius) * 2),
-        Positioned(
-          left: thumbRadius,
-          top: thumbRadius,
-          child: ''.text().xContainerGradient(
+        left: thumbCenterX,
+        top: thumbCenterY,
+        child: Container(
+          padding: EdgeInsets.zero,
+          width: thumbRadius * 2,
+          height: thumbRadius * 2,
+          color: widget.thumbColor,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(thumbRadius),
+              boxShadow: [
+                BoxShadow(
+                    color: _kThumbShadowColor, spreadRadius: 2, blurRadius: 3)
+              ]),
+        ));
+    return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onPanDown: (details) => handleTouch(details.globalPosition, context),
+        onPanStart: (details) => handleTouch(details.globalPosition, context),
+        onPanUpdate: (details) => handleTouch(details.globalPosition, context),
+        child: Stack(
+          children: [
+            SizedBox(
+                width: (radius + thumbRadius) * 2,
+                height: (radius + thumbRadius) * 2),
+            Positioned(
+              left: thumbRadius,
+              top: thumbRadius,
+              child: Container(
                 padding: EdgeInsets.zero,
                 width: radius * 2,
                 height: radius * 2,
-                rounded: radius,
-                gradient: SweepGradient(colors: colors),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(radius),
+                  gradient: SweepGradient(colors: colors),
+                ),
+                child: Text(''),
               ),
-        ),
-        thumb
-      ],
-    ).xGesture(
-      behavior: HitTestBehavior.opaque,
-      onPanDown: (details) => handleTouch(details.globalPosition, context),
-      onPanStart: (details) => handleTouch(details.globalPosition, context),
-      onPanUpdate: (details) => handleTouch(details.globalPosition, context),
-    );
+            ),
+            thumb
+          ],
+        ));
   }
 
   /// calculate colors picked from palette and update our states.
